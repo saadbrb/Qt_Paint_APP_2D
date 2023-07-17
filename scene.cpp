@@ -5,6 +5,7 @@ void Scene::addObjkt(GraphObjkt* objkt, bool showAllBBox){
     //    if(objkt->getSize() >= 2)   {
     graphikObjekten.push_back(new BBoxDecorator(objkt, showAllBBox));
     std::cout<<"objket added secessful!\n";
+    std::cout<<"Size is :  "<<graphikObjekten.size()<<"\n";
     //    }
     //    else {
     //        std::cout<<"Size ist klein! Not added possible!\n";
@@ -34,17 +35,18 @@ void Scene::deleletOneElementIsFound(QPointF point){
         }
     }
 }
-void Scene::changeColorAndOutline(QPointF point, QColor color, bool outline){
+GraphObjkt* Scene::changeColorAndOutline(QPointF point, QColor color, bool outline){
     if(graphikObjekten.size() > 0){
-        for(double i=0; i<graphikObjekten.size(); i++ ){
+        for(int i=0; i<graphikObjekten.size(); i++ ){
             if(graphikObjekten[i]->isNaehe(point)){
                 graphikObjekten[i]->setColor(color);
                 graphikObjekten[i]->setShowOutline(outline);
                 std::cout<<"Changed ok!\n";
-                return;
+                return graphikObjekten[i];
             }
         }
     }
+    return nullptr;
 }
 double Scene::isFound(QPointF punkt){
     if(graphikObjekten.size() > 0){
@@ -91,15 +93,15 @@ int Scene::getObjecktSize(){
 }
 
 GraphObjkt* Scene::getObject(int index){
-   if(index > 0  && index < graphikObjekten.size())
-       return graphikObjekten[index];
+    if(index > 0  && index < graphikObjekten.size())
+        return graphikObjekten[index];
 }
-QVector <GraphObjkt*>& Scene::getGraphObjkts() {
+QVector <GraphObjkt*> Scene::getGraphObjkts() {
     return graphikObjekten;
 }
 
 void Scene::mallAllObjectsWidthSameColor(QColor qColor){
-    for(double i=0; i<graphikObjekten.size(); i++){
+    for(int i=0; i<graphikObjekten.size(); i++){
         graphikObjekten[i]->setColor(qColor);
     }
 }

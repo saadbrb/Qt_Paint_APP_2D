@@ -8,4 +8,3 @@
 using Triangle = Polygone;
 
 #endif // TRIANGLE_H
-TTtest

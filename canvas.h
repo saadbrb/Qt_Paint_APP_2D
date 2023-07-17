@@ -16,7 +16,7 @@
 
 #define GRID_ROWS 6
 #define GRID_COLS 8
-typedef Scene Grid[GRID_ROWS][GRID_COLS];
+typedef QVector<GraphObjkt*> Grid[GRID_ROWS][GRID_COLS];
 //typedef QVector<QVector<QVector<GraphObjkt*>>> Grid;
 
 class Canvas : public QFrame
@@ -41,11 +41,10 @@ public:
     void setMode(MallenMode mode);
     void gridLinesCreate();
     void addNewObjectsToGrid(int generatePoints);
-    void gridCellColorChanged(QPointF punkt);
-    void gridDeleteCircle(QPointF punkt);
-    void clearGrid();
+    void gridCellColorChanged(GraphObjkt* tpr ,QColor color);
+    void gridDeleteCircles();
     void moveGridCircle();
-    std::vector<int> gibPositionn(QPointF punkt);
+    void fillGrid(QVector<GraphObjkt*> objBag);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -55,7 +54,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
 
-    Scene& getGridScene( QPointF p);
+    //Scene& getGridScene( QPointF p);
 private:
     PrimitiveMode primitiveMode = NONE;
     QColor qColor;
@@ -74,9 +73,7 @@ private:
     int cellSizeX = 64, cellSizeY = 32;
     Scene primitivesScene;
     Scene gridLinesScene;
-    int gridPositionRows, gridPositionCols;
-    int firstGridRow , firstGridCol;
-    Scene tpr;
+    Scene gridCirclesScene;
 
 
 };

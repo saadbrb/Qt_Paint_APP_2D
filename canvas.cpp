@@ -6,6 +6,7 @@
 #include <math.h>
 #include <cmath>
 #include <QPointF>
+#include <QVector>
 #include "canvas.h"
 
 // CREAT, DEL, COL, TRAFO
@@ -32,8 +33,6 @@ QSize Canvas::sizeHint() const
 void Canvas::clearCanvas(){
 
     primitivesScene.removeAllObjects();
-    graphObjkt = nullptr;
-    clearGrid();
     update();
 }
 
@@ -168,12 +167,6 @@ void Canvas::paintEventCreate(QPainter *painter) {
 
 
 
-void Canvas::gridDeleteCircle(QPointF punkt){
-    //TODO
-
-}
-
-
 void Canvas::paintEvent(QPaintEvent *event) {
 
 
@@ -189,24 +182,26 @@ void Canvas::paintEvent(QPaintEvent *event) {
     painter.fillRect(QRectF(0,0, width() -1, height() -1), Qt::white);
     painter.drawRect(QRectF(0,0, width() -1, height() -1));
 
-    std::cout << "painting grid:"<<std::endl;
-    for(int i=0; i<GRID_ROWS; i++){
-        for(int j=0; j<GRID_COLS; j++){
-            grid[i][j].paintAllObjects(&painter, false);
-        }
-    }
+
+    //    std::cout << "painting grid:"<<std::endl;
+    //    for(int i=0; i<GRID_ROWS; i++){
+    //        for(int j=0; j<GRID_COLS; j++){
+    //            grid[i][j].paintAllObjects(&painter, false);
+    //        }
+    //    }
     gridLinesCreate();
     gridLinesScene.paintAllObjects(&painter, showAllBboxes);
-
-
+    gridCirclesScene.paintAllObjects(&painter, false);
     primitivesScene.paintAllObjects(&painter, showAllBboxes);
+
     if(mallenMode == CREAT){
         paintEventCreate(&painter);
     }
     if (!dragging){
         if (mallenMode == TRAFO){
-            moveGridCircle();
             sceneIndex = -1;
+            gridCirclesIndex = -1;
+            fillGrid(gridCirclesScene.getGraphObjkts());
         }
 
         return;
@@ -214,36 +209,35 @@ void Canvas::paintEvent(QPaintEvent *event) {
 
     if(mallenMode == DEL){
         primitivesScene.deleletOneElementIsFound(firstPunkt);
-        gridDeleteCircle(firstPunkt);
+        gridCirclesScene.deleletOneElementIsFound(firstPunkt);
     }
     else if(mallenMode == COL){
-        gridCellColorChanged(firstPunkt);
-
         primitivesScene.changeColorAndOutline(firstPunkt, qColor, onlyOutline);
+        GraphObjkt* tpr = gridCirclesScene.changeColorAndOutline(firstPunkt, qColor, onlyOutline);
+        if(tpr != nullptr){
+            gridCellColorChanged(tpr, qColor);
+        }
     }
     else if (mallenMode == TRAFO) {
         if(firstPunkt == lastPunkt){
 
             sceneIndex = primitivesScene.isFound(firstPunkt);
-            gridCirclesIndex = getGridScene(firstPunkt).isFound(firstPunkt);
-            if(gridCirclesIndex != -1){
-                tpr = getGridScene(firstPunkt);
-                graphObjkt = getGridScene(firstPunkt).getObject(gridCirclesIndex);
-                getGridScene(firstPunkt).removeThisObject(graphObjkt);
+            gridCirclesIndex = gridCirclesScene.isFound(firstPunkt);
 
-            }
 
         }
-        if(sceneIndex != -1 || gridCirclesIndex != -1){
-
+        if(sceneIndex != -1){
             primitivesScene.moveThisObject(sceneIndex, lastPunkt);
-            tpr.moveThisObject(0, lastPunkt);
+        }
+        if( gridCirclesIndex != -1){
+            gridCirclesScene.moveThisObject(gridCirclesIndex, lastPunkt);
         }
     }
 
 
     primitivesScene.paintAllObjects(&painter, showAllBboxes);
-    tpr.paintAllObjects(&painter, false);
+    gridCirclesScene.paintAllObjects(&painter, false);
+
 }
 
 void Canvas::mousePressEvent(QMouseEvent *event) {
@@ -293,27 +287,115 @@ void Canvas::mouseReleaseEvent(QMouseEvent *event) {
 
 }
 
-Scene& Canvas::getGridScene( QPointF p) {
 
-    int col = std::min(int(p.x() / cellSizeX), GRID_COLS - 1) ;
-    int row = std::min(int(p.y() / cellSizeY), GRID_ROWS - 1) ;
+void Canvas::gridLinesCreate(){
+    gridLinesScene.removeAllObjects();
+    cellSizeX = width() / GRID_COLS;
+    cellSizeY = height() / GRID_ROWS;
+    for(int i = 1; i < GRID_COLS; ++i){
+        double x = i * width() / GRID_COLS;
+        QPointF firstPunkt(x, 0.0);
+        QPointF lastPunkt(x, height());
+        gridLinesScene.addObjkt(new Line(firstPunkt, lastPunkt, constColorGridLines), showAllBboxes);
+    }
+    for (int i = 1; i < GRID_ROWS; ++i){
+        double y = i * height() / GRID_ROWS;
+        QPointF firstPunkt(0.0, y);
+        QPointF lastPunkt(width(), y);
+        gridLinesScene.addObjkt(new Line(firstPunkt, lastPunkt, constColorGridLines), showAllBboxes);
+    }
 
-    gridPositionRows = row;
-    gridPositionCols = col;
+}
+void Canvas::gridDeleteCircles(){
 
-    std::cout << "cellSizeX: " << cellSizeX << std::endl;
-    std::cout << "cellSizeY: " << cellSizeY << std::endl;
-    std::cout << "col: " << col << std::endl;
-    std::cout << "row: " << row << std::endl;
-    return grid[row][col];
+    for(size_t i=0; i<GRID_ROWS; i++){
+        for(size_t j=0; j<GRID_COLS; j++){
+            grid[i][j].clear();
+        }
+    }
+
+}
+
+void Canvas::gridCellColorChanged(GraphObjkt* obj, QColor color){
+
+    bool found = false;
+    for(size_t i=0; i<GRID_ROWS; i++){
+        for(size_t j=0; j<GRID_COLS; j++){
+            for(int k=0; k<grid[i][j].size(); k++){
+                if(grid[i][j][k]->isNaehe(obj->getRefPnt())){
+                    found = true;
+                }
+            }
+            if(found){
+                for(int k=0; k<grid[i][j].size(); k++){
+                    grid[i][j][k]->setColor(color);
+                }
+                break;
+            }
+        }
+        if (found) break;
+    }
 }
 
 
-//void Canvas::fillGrid(QVector<GraphObjkt*> &objBag) {
-//    for (int i = 0; i < objBag.size(); i++){
-//        QPointF p = objBag[i]->getRefPnt();
-//        getGridScene(p).addObjkt(objBag[i], false);
-//    }
+
+void Canvas::addNewObjectsToGrid(int generatePoints){
+
+    gridDeleteCircles();
+    gridCirclesScene.removeAllObjects();
+    for(unsigned i=0; i < generatePoints; i++){
+        double x = std::rand() % width();
+        double y = std::rand() % height();
+        QPointF refpunkt(x, y);
+        QPointF lastPunkt_(x+6, y+6);
+
+        GraphObjkt*  objct = new Circle(refpunkt, lastPunkt_,qColor,false);
+        gridCirclesScene.addObjkt(objct,false);
+    }
+    fillGrid(gridCirclesScene.getGraphObjkts());
+    update();
+}
+
+void Canvas::fillGrid(QVector<GraphObjkt*> objBag) {
+    gridDeleteCircles();
+    for (int i = 0; i < objBag.size(); i++){
+        QPointF p = objBag[i]->getRefPnt();
+
+        int col = std::min(GRID_COLS - 1, int(std::floor(p.x() / cellSizeX)));
+        int row = std::min(GRID_ROWS - 1, int(std::floor(p.y() / cellSizeY)));
+
+        // Überprüfe, ob Zeilen- und Spaltenindizes gültig sind
+        //        if (row >= 0 && row < GRID_ROWS && col >= 0 && col < GRID_COLS) {
+        grid[row][col].push_back(objBag[i]);
+        //        } else {
+        //            std::cerr << "Ungültiger Index: (" << row << ", " << col << ")\n";
+        //        }
+    }
+
+
+}
+
+
+
+void Canvas::moveGridCircle(){
+
+
+}
+
+//Scene& Canvas::getGridScene( QPointF p) {
+
+//    int col = std::min(int(p.x() / cellSizeX), GRID_COLS - 1) ;
+//    int row = std::min(int(p.y() / cellSizeY), GRID_ROWS - 1) ;
+
+//    gridPositionRows = row;
+//    gridPositionCols = col;
+
+//    std::cout << "cellSizeX: " << cellSizeX << std::endl;
+//    std::cout << "cellSizeY: " << cellSizeY << std::endl;
+//    std::cout << "col: " << col << std::endl;
+//    std::cout << "row: " << row << std::endl;
+//    return grid[row][col];
+//}
 //    //    int a= frameSize().width();
 //    //    QPointF punkt(0.0, 0.0);
 //    //    QPointF punkta(0.0, a);
@@ -344,64 +426,5 @@ Scene& Canvas::getGridScene( QPointF p) {
 //    //        grid[row][col].push_back(objBag[i]);
 //    //    }
 //}
-void Canvas::clearGrid(){
 
-    for(size_t i=0; i<GRID_ROWS; i++){
-        for(size_t j=0; j<GRID_COLS; j++){
-            grid[i][j].removeAllObjects();
-        }
-    }
-}
-
-
-void Canvas::gridLinesCreate(){
-    gridLinesScene.removeAllObjects();
-    cellSizeX = width() / GRID_COLS;
-    cellSizeY = height() / GRID_ROWS;
-    for(int i = 1; i < GRID_COLS; ++i){
-        double x = i * width() / GRID_COLS;
-        QPointF firstPunkt(x, 0.0);
-        QPointF lastPunkt(x, height());
-        gridLinesScene.addObjkt(new Line(firstPunkt, lastPunkt, constColorGridLines), showAllBboxes);
-    }
-    for (int i = 1; i < GRID_ROWS; ++i){
-        double y = i * height() / GRID_ROWS;
-        QPointF firstPunkt(0.0, y);
-        QPointF lastPunkt(width(), y);
-        gridLinesScene.addObjkt(new Line(firstPunkt, lastPunkt, constColorGridLines), showAllBboxes);
-    }
-
-}
-
-void Canvas::gridCellColorChanged(QPointF punkt){
-
-    getGridScene(punkt).mallAllObjectsWidthSameColor(qColor);
-
-}
-
-void Canvas::addNewObjectsToGrid(int generatePoints){
-
-    clearGrid();
-    for(unsigned i=0; i<generatePoints; i++){
-        double firstPunkt = std::rand() % width();
-        double lastPunkt = std::rand() % height();
-        QPointF refpunkt(firstPunkt, lastPunkt);
-        QPointF lastPunkt_(firstPunkt+6, lastPunkt+6);
-
-        getGridScene(refpunkt).addObjkt((new Circle(refpunkt, lastPunkt_,qColor,false)),false);
-    }
-    update();
-}
-
-
-void Canvas::moveGridCircle(){
-
-    if(!dragging && gridCirclesIndex != -1 && tpr.getObjecktSize() == 1){
-        QPointF punkt = graphObjkt->getRefPnt();
-        getGridScene(punkt).addObjkt(graphObjkt, false);
-        graphObjkt = nullptr;
-        tpr.removeAllObjects();
-
-    }
-}
 

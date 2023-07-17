@@ -52,6 +52,9 @@ public:
     qreal maxF(qreal x, qreal y) const{
         return qMax(x, y);
     }
+    QColor getColor(){
+        return color;
+    }
     virtual void setShowOutline(bool);
     virtual void setColor(QColor);
     virtual void bewegen(QPointF punkt) = 0;
