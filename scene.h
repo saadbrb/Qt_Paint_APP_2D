@@ -9,22 +9,22 @@
 class Scene
 {
 private:
-    QVector <GraphObjkt*> graphikObjekten;
+    QVector <std::shared_ptr<GraphObjkt>> graphikObjekten;
 
 public:
     Scene(){}
-    void addObjkt(GraphObjkt* objkt, bool showAllBBox);
+    void addObjkt(std::shared_ptr<GraphObjkt> objkt, bool showAllBBox);
     void paintAllObjects(QPainter* event, bool show_all_bboxes);
     void removeAllObjects();
     void deleletOneElementIsFound(QPointF point);
-    GraphObjkt* changeColorAndOutline(QPointF point, QColor color, bool outline);
+    std::shared_ptr<GraphObjkt> changeColorAndOutline(QPointF point, QColor color, bool outline);
     double isFound(QPointF punkt);
     void mallAllObjectsWidthSameColor(QColor);
     void moveThisObject(double index, QPointF);
     int getObjecktSize();
-    void removeThisObject(GraphObjkt*);
-    GraphObjkt* getObject(int index);
-    QVector<GraphObjkt*> getGraphObjkts();
+    void removeThisObject(std::shared_ptr<GraphObjkt>);
+    std::shared_ptr<GraphObjkt> getObject(int index);
+    QVector<std::shared_ptr<GraphObjkt>> getGraphObjkts();
 
 };
 

@@ -71,7 +71,7 @@ void Canvas::setMode(MallenMode mode){
 
 void Canvas::paintEventCreateDragging(QPainter *painter) {
     if(primitiveMode == LINE){
-        graphObjkt = new Line(firstPunkt, lastPunkt, qColor);
+        graphObjkt = std::make_shared<Line>(firstPunkt, lastPunkt, qColor);
         graphObjkt->mallen(painter, showAllBboxes);
         return;
     }
@@ -80,18 +80,18 @@ void Canvas::paintEventCreateDragging(QPainter *painter) {
         return;
     }
     if (primitiveMode == CIRCLE) {
-        graphObjkt = new Circle(firstPunkt, lastPunkt, qColor,onlyOutline);
+        graphObjkt = std::make_shared<Circle>(firstPunkt, lastPunkt, qColor,onlyOutline);
         graphObjkt->mallen(painter, showAllBboxes);
         return;
     }
     if (primitiveMode == RECTANGLE) {
-        graphObjkt = new Rectangle(firstPunkt, lastPunkt, qColor,onlyOutline);
+        graphObjkt = std::make_shared<Rectangle>(firstPunkt, lastPunkt, qColor,onlyOutline);
         graphObjkt->mallen(painter, showAllBboxes);
         return;
     }
     if (primitiveMode == POLYGON && graphObjkt == nullptr) {
-        // graphObjkt = new Polygone(firstPunkt, lastPunkt, color_mode,only_outline);
-        graphObjkt = new Polygone(firstPunkt, lastPunkt, qColor,onlyOutline);
+        // graphObjkt = std::make_shared<Polygone>(firstPunkt, lastPunkt, color_mode,only_outline);
+        graphObjkt = std::make_shared<Polygone>(firstPunkt, lastPunkt, qColor,onlyOutline);
         graphObjkt->mallen(painter, showAllBboxes);
         return;
     }
@@ -102,7 +102,7 @@ void Canvas::paintEventCreateDragging(QPainter *painter) {
     if (primitiveMode == TRIANGLE && graphObjkt == nullptr) {
         std::cout << "TRIANGLE/nullptr firsPunkt: " << firstPunkt.x() << std::endl;
         std::cout << "TRIANGLE/nullptr lastPunkt: " << lastPunkt.x() << std::endl;
-        graphObjkt = new Triangle(firstPunkt, lastPunkt, qColor,onlyOutline);
+        graphObjkt = std::make_shared<Triangle>(firstPunkt, lastPunkt, qColor,onlyOutline);
         counterTriangle = counterPresse;
         return;
     }
@@ -146,13 +146,13 @@ void Canvas::paintEventCreate(QPainter *painter) {
         return;
 
     }
-    if (primitiveMode == POLYGON && !((Polygone *)graphObjkt)->isNear(lastPunkt)) {
+    if (primitiveMode == POLYGON && !std::dynamic_pointer_cast<Polygone>(graphObjkt)->isNear(lastPunkt)) {
         //graphObjkt->mallen(&painter);
         graphObjkt->addPunkt(lastPunkt);
         graphObjkt->mallen(painter, showAllBboxes);
         return;
     }
-    if (primitiveMode == POLYGON && ((Polygone *)graphObjkt)->isNear(lastPunkt)) {
+    if (primitiveMode == POLYGON && std::dynamic_pointer_cast<Polygone>(graphObjkt)->isNear(lastPunkt)) {
         //COde to finich
         graphObjkt->mallen(painter,showAllBboxes);
         //graphObjkt->addPunkt(polyPunkt);
@@ -213,7 +213,7 @@ void Canvas::paintEvent(QPaintEvent *event) {
     }
     else if(mallenMode == COL){
         primitivesScene.changeColorAndOutline(firstPunkt, qColor, onlyOutline);
-        GraphObjkt* tpr = gridCirclesScene.changeColorAndOutline(firstPunkt, qColor, onlyOutline);
+        std::shared_ptr<GraphObjkt> tpr = gridCirclesScene.changeColorAndOutline(firstPunkt, qColor, onlyOutline);
         if(tpr != nullptr){
             gridCellColorChanged(tpr, qColor);
         }
@@ -248,7 +248,7 @@ void Canvas::mousePressEvent(QMouseEvent *event) {
 
         firstPunkt = event->pos();
         if(primitiveMode == FREE_HAND){
-            graphObjkt = new Polyline(firstPunkt, qColor);
+            graphObjkt = std::make_shared<Polyline>(firstPunkt, qColor);
         }
 
         counterPresse++;
@@ -296,13 +296,13 @@ void Canvas::gridLinesCreate(){
         double x = i * width() / GRID_COLS;
         QPointF firstPunkt(x, 0.0);
         QPointF lastPunkt(x, height());
-        gridLinesScene.addObjkt(new Line(firstPunkt, lastPunkt, constColorGridLines), showAllBboxes);
+        gridLinesScene.addObjkt(std::make_shared<Line>(firstPunkt, lastPunkt, constColorGridLines), showAllBboxes);
     }
     for (int i = 1; i < GRID_ROWS; ++i){
         double y = i * height() / GRID_ROWS;
         QPointF firstPunkt(0.0, y);
         QPointF lastPunkt(width(), y);
-        gridLinesScene.addObjkt(new Line(firstPunkt, lastPunkt, constColorGridLines), showAllBboxes);
+        gridLinesScene.addObjkt(std::make_shared<Line>(firstPunkt, lastPunkt, constColorGridLines), showAllBboxes);
     }
 
 }
@@ -316,7 +316,7 @@ void Canvas::gridDeleteCircles(){
 
 }
 
-void Canvas::gridCellColorChanged(GraphObjkt* obj, QColor color){
+void Canvas::gridCellColorChanged(std::shared_ptr<GraphObjkt> obj, QColor color){
 
     bool found = false;
     for(size_t i=0; i<GRID_ROWS; i++){
@@ -349,14 +349,14 @@ void Canvas::addNewObjectsToGrid(int generatePoints){
         QPointF refpunkt(x, y);
         QPointF lastPunkt_(x+6, y+6);
 
-        GraphObjkt*  objct = new Circle(refpunkt, lastPunkt_,qColor,false);
+        std::shared_ptr<GraphObjkt>  objct = std::make_shared<Circle>(refpunkt, lastPunkt_,qColor,false);
         gridCirclesScene.addObjkt(objct,false);
     }
     fillGrid(gridCirclesScene.getGraphObjkts());
     update();
 }
 
-void Canvas::fillGrid(QVector<GraphObjkt*> objBag) {
+void Canvas::fillGrid(QVector<std::shared_ptr<GraphObjkt>> objBag) {
     gridDeleteCircles();
     for (int i = 0; i < objBag.size(); i++){
         QPointF p = objBag[i]->getRefPnt();
@@ -402,11 +402,11 @@ void Canvas::moveGridCircle(){
 
 //    //    for(int i=0; i<frameSize().width(); i+=cellSizeX){
 //    //        for(int j=0; j<frameSize().height(); j+=cellSizeY){
-//    //          //scene.addObjkt((new Line((i,j), (i+cellSizeX,j+cellSizeY)),showAllBboxes);
-//    //            //scene.addObjkt(new Line((i,j), (i+cellSizeX,j+cellSizeY)), showAllBboxes);
+//    //          //scene.addObjkt((std::make_shared<Line>((i,j), (i+cellSizeX,j+cellSizeY)),showAllBboxes);
+//    //            //scene.addObjkt(std::make_shared<Line>((i,j), (i+cellSizeX,j+cellSizeY)), showAllBboxes);
 //    //            QPointF pnktA(i,j);
 //    //            QPointF pnktB(i+cellSizeX,j+cellSizeY);
-//    //            scene.addObjkt(new Line(pnktA, pnktB, qColor), showAllBboxes);
+//    //            scene.addObjkt(std::make_shared<Line>(pnktA, pnktB, qColor), showAllBboxes);
 //    //        }
 //    //    }
 

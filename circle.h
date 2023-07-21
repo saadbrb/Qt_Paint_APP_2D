@@ -3,7 +3,7 @@
 
 #include "graphobjkt.h"
 #include <cmath>
-//haloolöwlwl
+
 class Circle : public GraphObjkt
 {
 private:

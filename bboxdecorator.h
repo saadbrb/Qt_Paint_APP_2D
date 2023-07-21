@@ -6,10 +6,10 @@ class BBoxDecorator : public GraphObjkt
 {
 private:
 
-    GraphObjkt* decoratedObj;
+    std::shared_ptr<GraphObjkt> decoratedObj;
 
 public:
-    BBoxDecorator(GraphObjkt* obj, bool deko_ ) : GraphObjkt(obj->getFirstPunkt(), deko_),
+    BBoxDecorator(std::shared_ptr<GraphObjkt> obj, bool deko_ ) : GraphObjkt(obj->getFirstPunkt(), deko_),
         decoratedObj(obj) {}
     void mallen(QPainter* objkt, bool schowAllBBox) override;
     void bewegen(QPointF punkt) override;

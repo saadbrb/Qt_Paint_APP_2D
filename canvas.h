@@ -16,8 +16,8 @@
 
 #define GRID_ROWS 6
 #define GRID_COLS 8
-typedef QVector<GraphObjkt*> Grid[GRID_ROWS][GRID_COLS];
-//typedef QVector<QVector<QVector<GraphObjkt*>>> Grid;
+typedef QVector<std::shared_ptr<GraphObjkt>> Grid[GRID_ROWS][GRID_COLS];
+//typedef QVector<QVector<QVector<std::shared_ptr<GraphObjkt>>>> Grid;
 
 class Canvas : public QFrame
 {
@@ -41,10 +41,10 @@ public:
     void setMode(MallenMode mode);
     void gridLinesCreate();
     void addNewObjectsToGrid(int generatePoints);
-    void gridCellColorChanged(GraphObjkt* tpr ,QColor color);
+    void gridCellColorChanged(std::shared_ptr<GraphObjkt> tpr ,QColor color);
     void gridDeleteCircles();
     void moveGridCircle();
-    void fillGrid(QVector<GraphObjkt*> objBag);
+    void fillGrid(QVector<std::shared_ptr<GraphObjkt>> objBag);
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -64,7 +64,7 @@ private:
     bool showAllBboxes = false;
     bool dragging = false;
     QPointF firstPunkt, lastPunkt;
-    GraphObjkt* graphObjkt = nullptr;
+    std::shared_ptr<GraphObjkt> graphObjkt = nullptr;
     int counterPresse = 0;
     int counterTriangle;
     double sceneIndex = -1;
