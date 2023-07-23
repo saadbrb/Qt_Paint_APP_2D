@@ -33,6 +33,9 @@ QSize Canvas::sizeHint() const
 void Canvas::clearCanvas(){
 
     primitivesScene.removeAllObjects();
+    gridDeleteCircles();
+    gridCirclesScene.removeAllObjects();
+    graphObjkt = nullptr;
     update();
 }
 
@@ -48,6 +51,7 @@ void Canvas::showOnlyOutline(bool outline){
     update();
 }
 void Canvas::schowAllBBoxes(bool bboxes){
+
 
     showAllBboxes = bboxes;
     update();
@@ -190,7 +194,7 @@ void Canvas::paintEvent(QPaintEvent *event) {
     //        }
     //    }
     gridLinesCreate();
-    gridLinesScene.paintAllObjects(&painter, showAllBboxes);
+    gridLinesScene.paintAllObjects(&painter, false);
     gridCirclesScene.paintAllObjects(&painter, false);
     primitivesScene.paintAllObjects(&painter, showAllBboxes);
 
@@ -296,13 +300,13 @@ void Canvas::gridLinesCreate(){
         double x = i * width() / GRID_COLS;
         QPointF firstPunkt(x, 0.0);
         QPointF lastPunkt(x, height());
-        gridLinesScene.addObjkt(new Line(firstPunkt, lastPunkt, constColorGridLines), showAllBboxes);
+        gridLinesScene.addObjkt(new Line(firstPunkt, lastPunkt, constColorGridLines), false);
     }
     for (int i = 1; i < GRID_ROWS; ++i){
         double y = i * height() / GRID_ROWS;
         QPointF firstPunkt(0.0, y);
         QPointF lastPunkt(width(), y);
-        gridLinesScene.addObjkt(new Line(firstPunkt, lastPunkt, constColorGridLines), showAllBboxes);
+        gridLinesScene.addObjkt(new Line(firstPunkt, lastPunkt, constColorGridLines), false);
     }
 
 }

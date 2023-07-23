@@ -60,7 +60,7 @@ double Scene::isFound(QPointF punkt){
     return -1;
 }
 void Scene::moveThisObject(double index, QPointF punkt){
-    if(graphikObjekten.size() > 0 && 0 <= index < graphikObjekten.size()){
+    if(graphikObjekten.size() > 0 && 0 <= index && index < graphikObjekten.size()){
         graphikObjekten[index]->bewegen(punkt);
     }
 }
